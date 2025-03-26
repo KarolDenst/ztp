@@ -19,6 +19,7 @@ lazy_static! {
     static ref BODIES: Mutex<HashMap<u32, Vec<u32>>> = Mutex::new(HashMap::new());
 }
 
+const DEFAULT_P: u32 = 2;
 impl ZpNumber {
     pub fn new(val: u32, p: u32) -> ZpNumber {
         if !BODIES.lock().unwrap().contains_key(&p) {

@@ -6,9 +6,6 @@ use crate::common::{matrix_op::factorize_lup, zp::ZpNumber};
 
 pub fn main() {
     for matrix in read_input() {
-        // println!("{}", matrix);
-        // let matrix_f64 = matrix.map(|x| x as f64);
-        // println!("{}", matrix_f64.determinant());
         if factorize_lup(&matrix).is_ok() {
             println!("YES");
         } else {
@@ -29,10 +26,10 @@ fn read_input() -> Vec<DMatrix<ZpNumber>> {
     let mut matrices = vec![];
     for _ in 0..z {
         let n: usize = lines.next().unwrap().unwrap().parse().unwrap();
-        let mut matrix = vec![vec![ZpNumber::zero(); n]; n];
+        let mut matrix = DMatrix::zeros(n, n);
 
         for i in 0..n {
-            matrix[i] = lines
+            let row: Vec<_> = lines
                 .next()
                 .unwrap()
                 .unwrap()
@@ -40,12 +37,11 @@ fn read_input() -> Vec<DMatrix<ZpNumber>> {
                 .map(|x| x.parse::<u32>().unwrap())
                 .map(|x| ZpNumber::new(x, p))
                 .collect();
+            for j in 0..n {
+                matrix[(i, j)] = row[j];
+            }
         }
-        matrices.push(DMatrix::from_vec(
-            n,
-            n,
-            matrix.into_iter().flatten().collect(),
-        ));
+        matrices.push(matrix);
     }
     matrices
 }

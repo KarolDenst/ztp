@@ -55,7 +55,7 @@ pub fn inverse_upper_triangular(matrix: &DMatrix<ZpNumber>) -> DMatrix<ZpNumber>
             for k in (i + 1)..=j {
                 sum += matrix[(i, k)] * inv[(k, j)];
             }
-            inv[(i, j)] = -sum / inv[(i, i)];
+            inv[(i, j)] = -sum * inv[(i, i)];
         }
     }
 

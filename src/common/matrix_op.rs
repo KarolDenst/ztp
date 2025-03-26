@@ -5,6 +5,7 @@ use super::zp::ZpNumber;
 // LAP = U
 // A = L-1 U P-1
 // A-1 = P U-1 L
+#[allow(clippy::type_complexity)]
 pub fn factorize_lup(
     a: &DMatrix<ZpNumber>,
 ) -> Result<(DMatrix<ZpNumber>, DMatrix<ZpNumber>, DMatrix<ZpNumber>), ()> {

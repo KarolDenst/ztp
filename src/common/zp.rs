@@ -1,10 +1,34 @@
-pub struct Zp {
-    p: u32,
-    inv: Vec<u32>,
+use num_traits::{identities::Zero, One};
+use std::{
+    cmp::max,
+    collections::HashMap,
+    fmt::{self, Display, Formatter},
+    ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub},
+    sync::Mutex,
+};
+
+use lazy_static::lazy_static;
+
+#[derive(Clone, Copy, Debug)]
+pub struct ZpNumber {
+    pub val: u32,
+    pub p: u32,
 }
 
-impl Zp {
-    pub fn new(p: u32) -> Zp {
+lazy_static! {
+    static ref BODIES: Mutex<HashMap<u32, Vec<u32>>> = Mutex::new(HashMap::new());
+}
+
+impl ZpNumber {
+    pub fn new(val: u32, p: u32) -> ZpNumber {
+        if !BODIES.lock().unwrap().contains_key(&p) {
+            ZpNumber::init_body(p);
+        }
+
+        ZpNumber { val: val % p, p }
+    }
+
+    fn init_body(p: u32) {
         let mut inv = vec![0; p as usize];
 
         inv[1] = 1;
@@ -25,34 +49,114 @@ impl Zp {
             inv[i as usize] = result;
         }
 
-        Zp { p, inv }
+        BODIES.lock().unwrap().insert(p, inv);
     }
 
-    pub fn add(&self, a: u32, b: u32) -> u32 {
-        (a + b) % self.p
+    pub fn inv(&self) -> ZpNumber {
+        let val = BODIES.lock().unwrap()[&self.p][self.val as usize];
+        ZpNumber::new(val, self.p)
     }
 
-    pub fn sub(&self, a: u32, b: u32) -> u32 {
-        (a + self.p - b) % self.p
+    pub fn zero() -> ZpNumber {
+        ZpNumber::new(0, DEFAULT_P)
     }
 
-    pub fn mul(&self, a: u32, b: u32) -> u32 {
-        (a * b) % self.p
+    pub fn one() -> ZpNumber {
+        ZpNumber::new(1, DEFAULT_P)
+    }
+}
+
+impl Add for ZpNumber {
+    type Output = Self;
+
+    fn add(self, other: ZpNumber) -> ZpNumber {
+        let p = max(self.p, other.p);
+        ZpNumber::new((self.val + other.val) % p, p)
+    }
+}
+
+impl AddAssign for ZpNumber {
+    fn add_assign(&mut self, other: ZpNumber) {
+        *self = *self + other;
+    }
+}
+
+impl Sub for ZpNumber {
+    type Output = Self;
+
+    fn sub(self, other: ZpNumber) -> ZpNumber {
+        let p = max(self.p, other.p);
+        ZpNumber::new((p + self.val - other.val) % p, p)
+    }
+}
+
+impl Mul for ZpNumber {
+    type Output = Self;
+
+    fn mul(self, other: ZpNumber) -> ZpNumber {
+        let p = max(self.p, other.p);
+        ZpNumber::new((self.val * other.val) % p, p)
+    }
+}
+
+impl MulAssign for ZpNumber {
+    fn mul_assign(&mut self, other: ZpNumber) {
+        *self = *self * other;
+    }
+}
+
+impl Div for ZpNumber {
+    type Output = Self;
+
+    fn div(self, other: ZpNumber) -> ZpNumber {
+        if other.val == 0 {
+            panic!("Division by zero");
+        }
+
+        self * other.inv()
+    }
+}
+
+impl Neg for ZpNumber {
+    type Output = Self;
+
+    fn neg(self) -> ZpNumber {
+        ZpNumber::new(self.p - self.val, self.p)
+    }
+}
+
+impl Zero for ZpNumber {
+    fn zero() -> Self {
+        ZpNumber::new(0, DEFAULT_P)
     }
 
-    pub fn div(&self, a: u32, b: u32) -> u32 {
-        self.mul(a, self.inv[b as usize])
+    fn is_zero(&self) -> bool {
+        self.val == 0
+    }
+}
+
+impl One for ZpNumber {
+    fn one() -> Self {
+        ZpNumber::new(1, DEFAULT_P)
     }
 
-    pub fn inv(&self, a: u32) -> u32 {
-        self.inv[a as usize]
+    fn set_one(&mut self) {
+        self.val = 1;
     }
 
-    pub fn fix(&self, a: &mut u32) {
-        *a %= self.p;
+    fn is_one(&self) -> bool {
+        self.val == 1
     }
+}
 
-    pub fn neg(&self, a: u32) -> u32 {
-        self.sub(0, a)
+impl PartialEq for ZpNumber {
+    fn eq(&self, other: &Self) -> bool {
+        self.val == other.val
+    }
+}
+
+impl Display for ZpNumber {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{}", self.val)
     }
 }

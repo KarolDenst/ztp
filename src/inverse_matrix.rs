@@ -4,28 +4,24 @@ use nalgebra::DMatrix;
 
 use crate::common::{
     matrix_op::{factorize_lup, inverse_upper_triangular},
-    zp::Zp,
+    zp::ZpNumber,
 };
 
 // A-1 = P U-1 L
 pub fn main() {
-    for (matrix, p) in read_input() {
-        let zp = Zp::new(p);
-        if let Ok((l, u, p)) = factorize_lup(&matrix, &zp) {
+    for matrix in read_input() {
+        if let Ok((l, u, p)) = factorize_lup(&matrix) {
             println!("YES");
 
-            let mut a_inv = p * inverse_upper_triangular(&u, &zp) * l;
-            a_inv.apply(|x| zp.fix(x));
+            let a_inv = p * inverse_upper_triangular(&u) * l;
             println!("{}", a_inv);
-            let mut i = matrix * a_inv;
-            i.apply(|x| zp.fix(x));
         } else {
             println!("NO");
         }
     }
 }
 
-fn read_input() -> Vec<(DMatrix<u32>, u32)> {
+fn read_input() -> Vec<DMatrix<ZpNumber>> {
     let stdin = io::stdin();
     let mut lines = stdin.lock().lines();
 
@@ -37,21 +33,23 @@ fn read_input() -> Vec<(DMatrix<u32>, u32)> {
     let mut matrices = vec![];
     for _ in 0..z {
         let n: usize = lines.next().unwrap().unwrap().parse().unwrap();
-        let mut matrix = DMatrix::zeros(n, n);
+        let mut matrix = vec![vec![ZpNumber::zero(); n]; n];
 
         for i in 0..n {
-            let row: Vec<u32> = lines
+            matrix[i] = lines
                 .next()
                 .unwrap()
                 .unwrap()
                 .split_whitespace()
                 .map(|x| x.parse::<u32>().unwrap())
+                .map(|x| ZpNumber::new(x, p))
                 .collect();
-            for j in 0..n {
-                matrix[(i, j)] = row[j];
-            }
         }
-        matrices.push((matrix, p));
+        matrices.push(DMatrix::from_vec(
+            n,
+            n,
+            matrix.into_iter().flatten().collect(),
+        ));
     }
     matrices
 }

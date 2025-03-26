@@ -1,33 +1,32 @@
 use std::io::{self, BufRead};
 
-use crate::common::{matrix_op::factorize_lup, zp::Zp};
+use crate::common::{matrix_op::factorize_lup, zp::ZpNumber};
 use nalgebra::DMatrix;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 const P: u32 = 7919;
 
 pub fn main() {
-    let zp = Zp::new(P);
     let mut matrix = read_input();
     let mut rng = StdRng::seed_from_u64(P as u64);
     for i in 0..matrix.nrows() {
         for j in 0..matrix.ncols() {
-            if i > j || matrix[(i, j)] == 0 {
+            if i > j || matrix[(i, j)].val == 0 {
                 continue;
             }
-            matrix[(i, j)] = rng.random_range(1..P);
-            matrix[(j, i)] = zp.neg(matrix[(i, j)]);
+            matrix[(i, j)] = ZpNumber::new(rng.random_range(1..P), P);
+            matrix[(j, i)] = -matrix[(i, j)];
         }
     }
 
-    if factorize_lup(&matrix, &zp).is_ok() {
+    if factorize_lup(&matrix).is_ok() {
         println!("YES");
     } else {
         println!("NO");
     }
 }
 
-fn read_input() -> DMatrix<u32> {
+fn read_input() -> DMatrix<ZpNumber> {
     let stdin = io::stdin();
     let mut lines = stdin.lock().lines();
     let size: usize = lines
@@ -50,8 +49,8 @@ fn read_input() -> DMatrix<u32> {
         .collect();
 
     for edge in edges {
-        data[(edge[0], edge[1])] = 1;
-        data[(edge[1], edge[0])] = 1;
+        data[(edge[0], edge[1])] = ZpNumber::one();
+        data[(edge[1], edge[0])] = ZpNumber::one();
     }
 
     data

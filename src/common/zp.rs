@@ -3,7 +3,7 @@ use std::{
     cmp::max,
     collections::HashMap,
     fmt::{self, Display, Formatter},
-    ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub},
+    ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign},
     sync::Mutex,
 };
 
@@ -88,6 +88,12 @@ impl Sub for ZpNumber {
     fn sub(self, other: ZpNumber) -> ZpNumber {
         let p = max(self.p, other.p);
         ZpNumber::new((p + self.val - other.val) % p, p)
+    }
+}
+
+impl SubAssign for ZpNumber {
+    fn sub_assign(&mut self, other: ZpNumber) {
+        *self = *self - other;
     }
 }
 

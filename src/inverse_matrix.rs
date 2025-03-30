@@ -3,18 +3,17 @@ use std::io::{self, BufRead};
 use nalgebra::DMatrix;
 
 use crate::common::{
-    matrix_op::{factorize_lup, inverse_upper_triangular},
+    matrix_op::{factorize_lup, inverse_lower_triangular, inverse_upper_triangular},
     zp::ZpNumber,
 };
 
-// A-1 = P U-1 L
+// A-1 = U-1L-1P
 pub fn main() {
     for matrix in read_input() {
         if let Ok((l, u, p)) = factorize_lup(&matrix) {
             println!("YES");
-            println!("{}", matrix);
 
-            let a_inv = p * inverse_upper_triangular(&u) * l;
+            let a_inv = inverse_upper_triangular(&u) * inverse_lower_triangular(&l) * p;
             println!("{}", a_inv);
         } else {
             println!("NO");

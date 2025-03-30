@@ -3,7 +3,7 @@ use std::{
     cmp::max,
     collections::HashMap,
     fmt::{self, Display, Formatter},
-    ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
     sync::Mutex,
 };
 
@@ -121,6 +121,12 @@ impl Div for ZpNumber {
         }
 
         self * other.inv()
+    }
+}
+
+impl DivAssign for ZpNumber {
+    fn div_assign(&mut self, other: ZpNumber) {
+        *self = *self / other;
     }
 }
 

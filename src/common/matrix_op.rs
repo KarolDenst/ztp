@@ -13,7 +13,7 @@ pub fn factorize_lup(
 
     let zero = ZpNumber::zero();
 
-    let mut u = a.clone(); // U starts as a copy of A
+    let mut u = a.clone();
     let mut l = DMatrix::<ZpNumber>::identity(n, n);
     let mut p = DMatrix::<ZpNumber>::identity(n, n);
 

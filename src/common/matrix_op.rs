@@ -85,6 +85,7 @@ pub fn inverse_upper_triangular(matrix: &DMatrix<ZpNumber>) -> DMatrix<ZpNumber>
 
     inv
 }
+
 pub fn inverse_lower_triangular(matrix: &DMatrix<ZpNumber>) -> DMatrix<ZpNumber> {
     let n = matrix.nrows();
     let mut inv = DMatrix::zeros(n, n);
@@ -105,4 +106,56 @@ pub fn inverse_lower_triangular(matrix: &DMatrix<ZpNumber>) -> DMatrix<ZpNumber>
     }
 
     inv
+}
+
+pub fn remove_ij_swapped(
+    a: &mut DMatrix<ZpNumber>,
+    inv: &mut DMatrix<ZpNumber>,
+    row: usize,
+    col: usize,
+    n: usize,
+) -> bool {
+    let last = n - 1;
+    a.swap_rows(row, last);
+    inv.swap_columns(row, last);
+    a.swap_columns(col, last);
+    inv.swap_rows(col, last);
+    let v = inv.row(last).clone_owned();
+    let u = inv.column(last).clone_owned();
+    let d = inv[(last, last)];
+    if d.val == 0 {
+        return false;
+    }
+    let uvd = u * v / d;
+    *inv -= uvd;
+    true
+}
+
+pub fn remove_ij(
+    a: &mut DMatrix<ZpNumber>,
+    inv: &mut DMatrix<ZpNumber>,
+    row: usize,
+    col: usize,
+) -> bool {
+    let v = inv.row(row).clone_owned();
+    let u = inv.column(col).clone_owned();
+    let d = inv[(row, col)];
+    *a = a.clone().remove_column(col).remove_row(row);
+    *inv = inv.clone().remove_row(row).remove_column(col);
+    if d.val == 0 {
+        return false;
+    }
+    let mut uvd = u * v / d;
+    uvd = uvd.remove_row(row).remove_column(col);
+    *inv -= uvd;
+    true
+}
+
+pub fn print_matrix(a: &DMatrix<ZpNumber>) {
+    for i in 0..a.nrows() {
+        for j in 0..a.ncols() {
+            print!("{:?} ", a[(i, j)].val);
+        }
+        println!();
+    }
 }

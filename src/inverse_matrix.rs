@@ -3,7 +3,7 @@ use std::io::{self, BufRead};
 use nalgebra::DMatrix;
 
 use crate::common::{
-    matrix_op::{factorize_lup, inverse_lower_triangular, inverse_upper_triangular},
+    matrix_op::{factorize_lup, inverse_lower_triangular, inverse_upper_triangular, print_matrix},
     zp::ZpNumber,
 };
 
@@ -14,7 +14,7 @@ pub fn main() {
             println!("YES");
 
             let a_inv = inverse_upper_triangular(&u) * inverse_lower_triangular(&l) * p;
-            println!("{}", a_inv);
+            print_matrix(&a_inv);
         } else {
             println!("NO");
         }

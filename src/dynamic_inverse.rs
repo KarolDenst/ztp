@@ -2,47 +2,25 @@ use std::io::{self, BufRead};
 
 use nalgebra::DMatrix;
 
-use crate::common::zp::ZpNumber;
+use crate::common::{
+    matrix_op::{print_matrix, remove_ij_swapped},
+    zp::ZpNumber,
+};
 
 pub fn main() {
     let data = read_input();
     for d in data.iter() {
         let mut a = d.a.clone();
         let mut inv = d.inv.clone();
-        if remove_ij(&mut a, &mut inv, d.row, d.col, d.a.nrows()).is_ok() {
+        if remove_ij_swapped(&mut a, &mut inv, d.row, d.col, d.a.nrows()) {
             println!("YES");
-            println!("{}", inv);
+            let inv = inv.remove_column(a.ncols() - 1);
+            let inv = inv.remove_row(a.ncols() - 1);
+            print_matrix(&inv);
         } else {
             println!("NO");
         }
     }
-}
-
-fn remove_ij(
-    a: &mut DMatrix<ZpNumber>,
-    inv: &mut DMatrix<ZpNumber>,
-    row: usize,
-    col: usize,
-    n: usize,
-) -> Result<(), ()> {
-    let last = n - 1;
-    for i in row..last {
-        a.swap_rows(i, i + 1);
-        inv.swap_columns(i, i + 1);
-    }
-    for j in col..last {
-        a.swap_columns(j, j + 1);
-        inv.swap_rows(j, j + 1);
-    }
-    let v = inv.row(last).clone_owned();
-    let u = inv.column(last).clone_owned();
-    let d = inv[(last, last)];
-    if d.val == 0 {
-        return Err(());
-    }
-    let uvd = u * v / d;
-    *inv -= uvd;
-    Ok(())
 }
 
 struct Data {

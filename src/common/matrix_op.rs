@@ -137,17 +137,15 @@ pub fn remove_ij(
     row: usize,
     col: usize,
 ) -> bool {
-    let v = inv.row(row).clone_owned();
-    let u = inv.column(col).clone_owned();
-    let d = inv[(row, col)];
-    *a = a.clone().remove_column(col).remove_row(row);
-    *inv = inv.clone().remove_row(row).remove_column(col);
-    if d.val == 0 {
+    if inv[(row, col)].val == 0 {
         return false;
     }
-    let mut uvd = u * v / d;
-    uvd = uvd.remove_row(row).remove_column(col);
+    let uvd = inv.column(col) * inv.row(row) / inv[(row, col)];
     *inv -= uvd;
+    // uvd = uvd.remove_row(row).remove_column(col);
+    *a = a.clone().remove_column(col).remove_row(row);
+    *inv = inv.clone().remove_row(row).remove_column(col);
+    // *inv -= uvd;
     true
 }
 

@@ -112,11 +112,12 @@ impl MulAssign for ZpNumber {
     }
 }
 
+#[allow(clippy::suspicious_arithmetic_impl)]
 impl Div for ZpNumber {
     type Output = Self;
 
     fn div(self, other: ZpNumber) -> ZpNumber {
-        if other.val == 0 {
+        if other.is_zero() {
             panic!("Division by zero");
         }
 

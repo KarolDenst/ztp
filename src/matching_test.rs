@@ -2,6 +2,7 @@ use std::io::{self, BufRead};
 
 use crate::common::{matrix_op::factorize_lup, zp::ZpNumber};
 use nalgebra::DMatrix;
+use num_traits::Zero;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 const P: u32 = 7919;
@@ -11,7 +12,7 @@ pub fn main() {
     let mut rng = StdRng::seed_from_u64(P as u64);
     for i in 0..matrix.nrows() {
         for j in 0..matrix.ncols() {
-            if i > j || matrix[(i, j)].val == 0 {
+            if i > j || matrix[(i, j)].is_zero() {
                 continue;
             }
             matrix[(i, j)] = ZpNumber::new(rng.random_range(1..P), P);

@@ -1,4 +1,5 @@
 use nalgebra::DMatrix;
+use num_traits::Zero;
 
 use super::zp::ZpNumber;
 
@@ -123,7 +124,7 @@ pub fn remove_ij_swapped(
     let v = inv.row(last).clone_owned();
     let u = inv.column(last).clone_owned();
     let d = inv[(last, last)];
-    if d.val == 0 {
+    if d.is_zero() {
         return false;
     }
     let uvd = u * v / d;
@@ -132,21 +133,19 @@ pub fn remove_ij_swapped(
 }
 
 pub fn remove_ij(
-    a: &mut DMatrix<ZpNumber>,
-    inv: &mut DMatrix<ZpNumber>,
+    mut a: DMatrix<ZpNumber>,
+    mut inv: DMatrix<ZpNumber>,
     row: usize,
     col: usize,
-) -> bool {
-    if inv[(row, col)].val == 0 {
-        return false;
+) -> Option<(DMatrix<ZpNumber>, DMatrix<ZpNumber>)> {
+    if inv[(row, col)].is_zero() {
+        return None;
     }
     let uvd = inv.column(col) * inv.row(row) / inv[(row, col)];
-    *inv -= uvd;
-    // uvd = uvd.remove_row(row).remove_column(col);
-    *a = a.clone().remove_column(col).remove_row(row);
-    *inv = inv.clone().remove_row(row).remove_column(col);
-    // *inv -= uvd;
-    true
+    inv -= uvd;
+    inv = inv.remove_row(row).remove_column(col);
+    a = a.remove_column(col).remove_row(row);
+    Some((a, inv))
 }
 
 pub fn print_matrix(a: &DMatrix<ZpNumber>) {

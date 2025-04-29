@@ -8,6 +8,7 @@ use crate::common::{
     zp::ZpNumber,
 };
 use nalgebra::DMatrix;
+use num_traits::Zero;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 const P: u32 = 7919;
@@ -17,7 +18,7 @@ pub fn main() {
     let mut rng = StdRng::seed_from_u64(P as u64);
     for i in 0..matrix.nrows() {
         for j in 0..matrix.ncols() {
-            if i > j || matrix[(i, j)].val == 0 {
+            if i > j || matrix[(i, j)].is_zero() {
                 continue;
             }
             matrix[(i, j)] = ZpNumber::new(rng.random_range(1..P), P);
@@ -33,26 +34,15 @@ pub fn main() {
     let mut indices = (0..n).collect::<Vec<_>>();
     for _ in (0..n).step_by(2) {
         for j in 1..matrix.nrows() {
-            if inv[(0, j)].val != 0 && edges.contains(&(indices[0], indices[j])) {
+            if !inv[(0, j)].is_zero() && edges.contains(&(indices[0], indices[j])) {
                 removed.push((indices[0], indices[j]));
                 indices.remove(j);
                 indices.remove(0);
 
-                remove_ij(&mut matrix, &mut inv, j, 0);
-                remove_ij(&mut matrix, &mut inv, 0, j - 1);
-
-                // let mut mat2 = matrix.clone();
-                // mat2 = mat2.remove_column(j);
-                // mat2 = mat2.remove_row(j);
-                // mat2 = mat2.remove_column(0);
-                // mat2 = mat2.remove_row(0);
-                //
-                // let (l, u, p) = factorize_lup(&mat2).unwrap();
-                // let inv2 = inverse_upper_triangular(&u) * inverse_lower_triangular(&l) * p;
-                //
-                // println!("===================");
-                // println!("{}", inv);
-                // println!("{}", inv2);
+                let (new_mat, new_inv) = remove_ij(matrix, inv, j, 0).unwrap();
+                let (new_mat, new_inv) = remove_ij(new_mat, new_inv, 0, j - 1).unwrap();
+                matrix = new_mat;
+                inv = new_inv;
 
                 break;
             }
